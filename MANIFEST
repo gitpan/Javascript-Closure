@@ -1,0 +1,7 @@
+Changes
+Makefile.PL
+MANIFEST
+README
+t/Javascript-Closure.t
+lib/Javascript/Closure.pm
+META.yml                                 Module meta-data (added by MakeMaker)
