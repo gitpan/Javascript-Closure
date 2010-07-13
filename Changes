@@ -1,5 +1,11 @@
 Revision history for Perl extension Javascript::Closure.
 
+0.03  2010/07/13
+	  - updated the input parameter to accept multiple urls or strings. 
+      - updated the output_format to accept multiple format.
+      - updated the doc accordingly
+      - updated the test suite
+
 0.02  2010/07/13
 	  - the packaging was wrong. 
       - updated the proper version	
