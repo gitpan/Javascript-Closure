@@ -4,6 +4,7 @@ use strict;
 use warnings;
 use Carp;
 use LWP::UserAgent;
+our $VERSION = 0.02;
 
 use constant {
     WHITESPACE_ONLY        =>'WHITESPACE_ONLY',
@@ -25,7 +26,7 @@ our @ISA = qw(Exporter);
 our @EXPORT_OK = qw(minify);
 
 
-our $VERSION = '1.00';
+
 
 sub minify {
   my %args = @_;
@@ -48,7 +49,7 @@ sub minify {
   # Create a request
   my $req = HTTP::Request->new(POST => CLOSURE_COMPILER_SERVICE);
   $req->content_type('application/x-www-form-urlencoded');
-  $req->content("$js&output_info=compiled_code&output_format=text&compilation_level=WHITESPACE_ONLY");
+  $req->content("$js&output_info=$output_info&output_format=$output_format&compilation_level=$compilation_level");
 
   my $res = $ua->request($req);
   if ($res->is_success) {
@@ -123,12 +124,12 @@ If you do not supply an input, it will output a dummy compression set of data.
 
 Other are options set by default:
 
-- compilation_level: 
+ - compilation_level: 
     WHITESPACE_ONLY
     SIMPLE_OPTIMIZATIONS (default)
     ADVANCED_OPTIMIZATIONS
     
-- output_info:
+ - output_info:
      compiled_code (default)
      warnings
      errors
@@ -187,7 +188,7 @@ i will try to do my best to fix it (patches welcome)!
 
 =head1 AUTHOR
 
-Shirirules E<lt>shiriru0111[arobas]hotmail.comE<gt>
+shiriru E<lt>shiriru0111[arobas]hotmail.comE<gt>
 
 =head1 LICENSE AND COPYRIGHT
 

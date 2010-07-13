@@ -1,5 +1,9 @@
 Revision history for Perl extension Javascript::Closure.
 
-0.01  Tue Jul 13 00:26:26 2010
-	- original version
+0.02  2010/07/13
+	  - the packaging was wrong. 
+      - updated the proper version	
+
+0.01  Tue Jul 13 10:56:56 2010
+	- First version, released on an unsuspecting world.
 

@@ -1,12 +1,13 @@
 use 5.008008;
 use ExtUtils::MakeMaker;
-# See lib/ExtUtils/MakeMaker.pm for details of how to influence
-# the contents of the Makefile that is written.
+
 WriteMakefile(
     NAME              => 'Javascript::Closure',
-    VERSION_FROM      => 'lib/Javascript/Closure.pm', # finds $VERSION
-    PREREQ_PM         => {}, # e.g., Module::Name => 1.1
-    ($] >= 5.005 ?     ## Add these new keywords supported since 5.005
-      (ABSTRACT_FROM  => 'lib/Javascript/Closure.pm', # retrieve abstract from module
-       AUTHOR         => 'cyrille <cyrille@apple.com>') : ()),
+    AUTHOR         => 'SHIRIRU <shiriru0111@hotmail.com>',
+    VERSION_FROM      => 'lib/Javascript/Closure.pm', 
+    ABSTRACT_FROM     => 'lib/Javascript/Closure.pm', 
+    PREREQ_PM         => {
+		'LWP::UserAgent'=> 0,
+		'Test::More'	=> 0
+	},
 );
