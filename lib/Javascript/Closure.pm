@@ -4,118 +4,111 @@ use strict;
 use warnings;
 use Carp;
 use LWP::UserAgent;
-our $VERSION = 0.03;
+our $VERSION = 0.04;
 
 use constant {
-    WHITESPACE_ONLY        =>'WHITESPACE_ONLY',
-    SIMPLE_OPTIMIZATIONS   =>'SIMPLE_OPTIMIZATIONS',
-    ADVANCED_OPTIMIZATIONS =>'ADVANCED_OPTIMIZATIONS',
-    COMPILED_CODE          =>'compiled_code',
-    WARNINGS               =>'warnings',
-    ERRORS                 =>'errors',
-    STATISTICS             =>'statistics',
-    TEXT                   =>'text',
-    JSON                   =>'json',
-    XML                    =>'xml',
+    WHITESPACE_ONLY         => 'WHITESPACE_ONLY',
+    SIMPLE_OPTIMIZATIONS    => 'SIMPLE_OPTIMIZATIONS',
+    ADVANCED_OPTIMIZATIONS  => 'ADVANCED_OPTIMIZATIONS',
+	QUIET					=> 'QUIET',
+	DEFAULT					=> 'DEFAULT',
+	VERBOSE					=> 'VERBOSE',
+    COMPILED_CODE           => 'compiled_code',
+    WARNINGS                => 'warnings',
+    ERRORS                  => 'errors',
+    STATISTICS              => 'statistics',
+    TEXT                    => 'text',
+    JSON                    => 'json',
+    XML                     => 'xml',
     CLOSURE_COMPILER_SERVICE=>'http://closure-compiler.appspot.com/compile'
 };
 
+my  @compilation_level = qw(WHITESPACE_ONLY SIMPLE_OPTIMIZATIONS ADVANCED_OPTIMIZATIONS);
+my  @output_info       = qw(COMPILED_CODE WARNINGS ERRORS STATISTICS);
+my  @output_format     = qw(TEXT JSON XML);
+my  @warning_level     = qw(QUIET DEFAULT VERBOSE);
 
 require Exporter;
 our @ISA = qw(Exporter);
-our @EXPORT_OK = qw(minify 
-					WHITESPACE_ONLY 
-					SIMPLE_OPTIMIZATIONS 
-					ADVANCED_OPTIMIZATIONS 
-					COMPILED_CODE 
-					WARNINGS 
-					ERRORS 
-					STATISTICS 
-					TEXT 
-					JSON 
-					XML
-);
-our %EXPORT_TAGS = (CONSTANTS => [qw(WHITESPACE_ONLY SIMPLE_OPTIMIZATIONS ADVANCED_OPTIMIZATIONS COMPILED_CODE WARNINGS ERRORS STATISTICS TEXT JSON XML)]);
+our @EXPORT_OK   = ('minify',@compilation_level,@output_info,@output_format,@warning_level);
+our %EXPORT_TAGS = (CONSTANTS => [@compilation_level,@output_info,@output_format,@warning_level]);
 
+our $TIMEOUT     = 5;
 
 sub minify {
   my %args = @_;
-     
-  my $output_info       = $args{output_info}       || COMPILED_CODE;
-     $output_info       = _cleanup_output_info($output_info);
 
-  my $output_format     = $args{output_format}     || TEXT;   
-  my $compilation_level = $args{compilation_level} || WHITESPACE_ONLY;  
+  my %send                 = ();
+  $send{output_info}       = _verify(\@output_info,      $args{output_info}      ,'lower') || COMPILED_CODE;
+  $send{output_format}     = _verify(\@output_format,    $args{output_format}    ,'lower') || TEXT;  
+  $send{compilation_level} = _verify(\@compilation_level,$args{compilation_level}        ) || WHITESPACE_ONLY; 
+  $send{warning_level}     = _verify(\@warning_level    ,$args{warning_level}            ) || DEFAULT;  
 
-  my $js                = $args{input}             || 'var test=true;//this is a test';
-  my $source            = _cleanup_code_source($js);
+  my $js                   = $args{input} || 'var test=true;//this is a test';
+  #create the user agent
+  my $ua   = _create_ua();
+  my $source               = _cleanup_code_source($ua,$js);
 
-  my $ret    = '';
+  $send{js_code}  = $source->{js_code}  if(@{ $source->{js_code}  }  > 0);
+  $send{code_url} = $source->{code_url} if(@{ $source->{code_url} }  > 0);
 
+  return  _compile($ua,\%send);
+}
+
+#hacky i know
+sub _verify {
+  my ($vars,$value,$lower) = @_;
+
+  return undef if(!$value);#set default value
+
+  $value = [$value] if(ref($value) ne 'ARRAY');
+
+  my $choice = join(',',@$vars);
+  $choice    = "\L$choice" if($lower);
+
+  foreach my $val (@$value){
+  	  croak $val.' is not in:'.$choice if($val && !grep(/^$val$/i,@$vars));
+	  $val = ($lower) ? "\L$val" :"\U$val";
+  }
+  return $value;
+}
+
+sub _create_ua {
   my $ua = LWP::UserAgent->new;
-     $ua->agent("closure-minifier/0.1");
-
-  #we have some raw data here of javascript
-  if($source->{string} ne ''){
-     $ret.= _compile($ua,$source->{string},$output_info,$output_format,$compilation_level);
-  }
-
-  #in the mix we got some urls too
-  if($source->{urls} ne ''){
-     $ret.= _compile($ua,$source->{urls},$output_info,$output_format,$compilation_level);
-  }
-  return $ret;
- 
+     $ua-> agent(__PACKAGE__."/".$VERSION);
+     $ua-> timeout($TIMEOUT);
+  return $ua;
 }
 
 sub _compile {
-  my ($ua,$js,$output_info,$output_format,$compilation_level)=@_;
+  my ($ua,$args)=@_;
 
-  # Create a request
-  my $req = HTTP::Request->new(POST => CLOSURE_COMPILER_SERVICE);
-  $req->content_type('application/x-www-form-urlencoded');
-  $req->content("$js&$output_info&output_format=$output_format&compilation_level=$compilation_level");
+  my $res = $ua->post(CLOSURE_COMPILER_SERVICE,$args);
+  return $res->content if ($res->is_success);
 
-  my $res = $ua->request($req);
-  if ($res->is_success) {
-      return $res->content;
-  }
-  croak 'Fail to connect to '.CLOSURE_COMPILER_SERVICE.':'.$res->is_error;
-
-}
-
-sub _cleanup_output_info {
-   my $output_info = shift;
-   if(ref($output_info) eq 'ARRAY') {
-	   map { $_='output_info='.$_; } @$output_info;
-	   $output_info= join '&',@$output_info;
-   } 
-   else {
-      $output_info='output_info='.$output_info;
-   }
-   return $output_info;
+  croak 'Fail to connect to '.CLOSURE_COMPILER_SERVICE.':'.$res->as_string;
 }
 
 sub _cleanup_code_source {
-   my $code_source = shift;
+   my ($ua,$code_source) = @_;
 
    $code_source = [$code_source] if(ref($code_source) ne 'ARRAY');
 
    my (@str,@urls);
    foreach my $js (@$code_source) {
-
        if($js!~m{^http://}){
-           $js =~ s/(\W)/"%" . unpack("H2", $1)/ge;#urlencode 
-           push @str,'js_code='.$js;
+           push @str,$js; next;
        }
-       else {
-           push @urls,'code_url='.$js;
-       }
+	   if($ua->get($js)->is_success){
+		   push @urls,$js;
+	   }
+	   else {
+		   carp 'The following url could not be fetched:'.$js;
+	   }
    }
-
    return {
-	   string => @str > 0 ? join '&',@str  :'',
-	   urls   => @urls> 0 ? join '&',@urls :'',
+	   js_code  =>\@str,
+	   code_url =>\@urls
    };
 }
 
@@ -132,16 +125,13 @@ Javascript::Closure - compress your javascript code using Google online service 
 
 =head1 VERSION
 
-0.03
+0.04
 
 =head1 SYNOPSIS
 
 
-	#nothing is imported by default
-    use Javascript::Closure qw(minify); 
-
-    #you can import the constants too
-    use Javascript::Closure qw(minify :CONSTANTS);
+    #nothing is imported by default
+    use Javascript::Closure qw(minify :CONSTANTS); 
 
     #open a file
     open (FILE,'<','jscript.js') or die $!;
@@ -156,30 +146,14 @@ Javascript::Closure - compress your javascript code using Google online service 
     print FILE $compressed;
     close FILE;
 
-    #further tweaking of the result is possible though...
-
-    #you can add options:
+    #further settings:
     my $compressed = minify(input            => [$string,'http://www.domain.com/my.js',$string2,'http://www.domain2.com/my2.js'],
-                            output_format    => Javascript::Closure::XML,
-                            output_info      => Javascript::Closure::STATISTICS,
-                            compilation_level=> Javascript::Closure::ADVANCED_OPTIMIZATIONS
+                            output_format    => XML,
+                            output_info      => [STATISTICS,WARNINGS,COMPILED_CODE],
+                            compilation_level=> SIMPLE_OPTIMIZATIONS,
+							warning_level	 => VERBOSE
     );
 
-
-     my $compressed = minify(input            => $string,
-                            output_format    => XML,
-                            output_info      => STATISTICS,
-                            compilation_level=> ADVANCED_OPTIMIZATIONS
-    );  
-
-    #specifiy multiple output_info
-    use Javascript::Closure qw(minify :CONSTANTS);
-
-     my $compressed = minify(input            => $string,
-                            output_format    => JSON,
-                            output_info      => [STATISTICS WARNINGS COMPILED_CODE],
-                            compilation_level=> SIMPLE_OPTIMIZATIONS
-    ); 
 
 =head1 DESCRIPTION
 
@@ -188,15 +162,158 @@ via a REST API.
 See L<http://closure-compiler.appspot.com/> for further information.
 
 
-=head1 MOTIVATION
+=head2 MOTIVATION
 
 Needed a package to encapsulate a coherent API for a future Javascript::Minifier::Any package.
 
-=head1 ADVANTAGES
+=head2 ADVANTAGES
 
 Gives you access to the closure compression algo with an unified API.
+It also gives you access to code analyze via errors, warnings and authorizing via statistics.
+
+=head1  SUBROUTINE
+
+
+=head2 minify
+
+=over
+
+Takes an hash with the following parameters(parameters ended with * are optionals):
+
+=item input
+
+Specify the javascript source to be compressed/analysed. 
+It can be either an url or a scalar.
+
+You can also use an array reference containing multiple urls or raw source code.
+
+Example:
+
+    use Javascript::Closure qw(minify :CONSTANTS); 
+	
+    my $compressed   = minify(input=>$jscode);
+    my $compressed   = minify(input=>'http://www.yourdomain.com/yourscript.js');    
+    my $compressed   = minify(input=>['http://www.yourdomain.com/yourscript.js','http://www.yourdomain.com/yourscript2.js',$jscode]);     
+
+
+=item compilation_level
+
+Specifies the algorithm use to compress the javascript code. 
+You can specify them by using one of the following constants:
+
+    WHITESPACE_ONLY
+    SIMPLE_OPTIMIZATIONS (default)
+    ADVANCED_OPTIMIZATIONS
+
+Example:
+
+    use Javascript::Closure qw(minify :CONSTANTS); 
+	
+    my $compressed   = minify(input=>$jscode,compilation_level=>WHITESPACE_ONLY);
+
+	#if you do not import the constants:
+    my $compressed   = minify(input=>$jscode,compilation_level=>Javascript::Closure::WHITESPACE_ONLY);
+
+See CONSTANTS section for further information about the algorithms.
+    
+=item output_info
+
+Specify the informations you will get back from the service.
+it accepts either a scalar or an array reference.
+You can specify them by using the following constants:
+
+     COMPILED_CODE (default)
+     WARNINGS
+     ERRORS
+     STATISTICS
+
+Example:
+
+    use Javascript::Closure qw(minify :CONSTANTS); 
+	
+	#you just want to get the code analysed before compression
+    my $warnings   = minify(input=>$jscode,output_info=>WARNINGS);
+
+	#only the errors in your code
+    my $errors   = minify(input=>$jscode,output_info=>ERRORS);
+
+	#everything was ok so you want to compressed code and some statistics about the efficiency of the compresssion
+    my $errors   = minify(input=>$jscode,output_info=>[COMPILED_CODE,STATISTICS]);
+     
+ - output_format
+
+Specify the format of the response.
+It can be one of the following constants:
+
+     TEXT (default)
+     JSON
+     XML
+
+Example:
+
+    use Javascript::Closure qw(minify :CONSTANTS); 
+	
+	#the default
+    my $warnings   = minify(input=>$jscode,output_format=>TEXT);
+
+	#get back the response as XML
+    my $errors   = minify(input=>$jscode,output_format=>XML);
+
+	#get back the response as JSON
+    my $errors   = minify(input=>$jscode,output_format=>JSON);
+
+Specifying the format can be useful if you want not only the compiled code but warnings,errors or statistics.
+Though minify only returns the compressed version of the javascript code as a scalar,you can easily json-ify it 
+to retrieve the information (you could do so with a corresponding XML module):
+
+Example:
+
+    use Javascript::Closure qw(minify :CONSTANTS); 
+	use JSON;
+	
+	#the default
+    my $output     = minify(input=>$jscode,output_format=>JSON,output_info=>[COMPILED_CODE,STATISTICS]);
+
+	#change the raw string into perl structure
+	my $response   = from_json($output);
+
+	my $statistics = $response->{statistics};
+	say $statistics->{originalSize};
+	say $statistics->{compressedSize};
+
+
+Javascript::Closure does not offer shortcuts access to errors,warnings or statistics for now.
+Might add a Javascript::Closure::Response::JSON to make thing even sweeter but access through an hash is certainly faster
+and the overhead of function call does not seem necessary...
+
+=item warning_level
+
+Specifies the amount of information you will get when you set the output_info to WARNINGS. 
+You can specify them by using one of the following constants:
+
+    QUIETE
+    DEFAULT (default)
+    VERBOSE
+
+Example:
+
+    use Javascript::Closure qw(minify :CONSTANTS); 
+	
+    my $compressed   = minify(input            => $jscode,
+                              compilation_level=> WHITESPACE_ONLY,
+                              output_info      => [COMPILE_CODE,WARNINGS],
+                              warning_level    => VERBOSE
+    );
+
+
+See CONSTANTS section for further information about the algorithms.
+
+=back
 
 =head1  CONSTANTS
+
+Each optional parameter to minify can be specified via constants.
+If you do not import the :CONSTANTS, you will have to write Javascript::Closure::NAME_OF_THE_CONSTANT;
 
 =item B<compilation level related>
 
@@ -241,49 +358,36 @@ See L<http://code.google.com/intl/ja/closure/compiler/docs/api-ref.html#out> for
 
 See L<http://code.google.com/intl/ja/closure/compiler/docs/api-ref.html#output_info> for further information.
 
+=item B<warning level related>
+
+ - QUIET
+
+ - DEFAULT
+
+ - VERBOSE
+
+
+See L<http://code.google.com/intl/ja/closure/compiler/docs/api-ref.html#warn> for further information.
+
+
 =over 
 
-=head1  SUBROUTINES/METHODS
+=head1 PACKAGE PROPERTY
 
-=over 
+=head2 TIMEOUT
 
-=item B<minify(input=>scalar||array ref,compilation_level=>scalar,output_info=>scalar,output_format=>scalar)>
+=over
 
-Takes an hash with the following parameters:
+Set by default to 10s. You can modify it if you need too:
 
- - input: scalar or array ref
-
-The input accepts either a scalar containing the javascript code to be parsed or an url to grap the javascript.
-You can also use an array reference containing multiple urls or raw source code (input=>[$string,'http://www.domain.com/f.js']). 
-If you combine both urls and raw source code, minify will create 2 queries to the service.
-
-
-Other parameters are options set by default:
-
- - compilation_level:scalar
-
-    WHITESPACE_ONLY
-    SIMPLE_OPTIMIZATIONS (default)
-    ADVANCED_OPTIMIZATIONS
-    
- - output_info: scalar or array ref
-
-     COMPILED_CODE (default)
-     WARNINGS
-     ERRORS
-     STATISTICS
-     
- - output_format:scalar
-     TEXT (default)
-     JSON
-     XML
-
-minify returns the compressed version of the javascript code as a scalar.
-The package does not send back a JSON or XML object. Only the raw string from the service.
+    $Javascript::Closure::Timeout=15;
 
 =back
 
+
 =head1 DIAGNOSTICS
+
+=head2 croak
 
 =over
 
@@ -292,6 +396,20 @@ The package does not send back a JSON or XML object. Only the raw string from th
 The module could not connect and successfully compress your javascript. 
 See the detail error to get a hint.
 
+=item C<< .... is not in:... >>
+
+One of the optional parameter received a value that is not expected. 
+
+=back
+
+=head2 carp
+
+=over
+
+=item C<< The following url could not be fetched::... >>
+
+The module could not connect to the url. 
+See the detail error to get a hint.
 
 =back
 
@@ -303,7 +421,6 @@ See the detail error to get a hint.
 
 none of the following optional parameters are supported:
 
- - warning_level
  - use_closure_library
  - formatting
  - output_file_name
@@ -319,9 +436,14 @@ none of the following optional parameters are supported:
 
 =item B<other related modules>
 
-L<Javascript::Minifier>
-L<Javascript::Packer>
+L<WebService::Google::Closure>
+
+L<JavaScript::Minifier>
+
+L<JavaScript::Packer>
+
 L<JavaScript::Minifier::XS>
+
 L<http://closure-compiler.appspot.com/>
 
 =back

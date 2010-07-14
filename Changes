@@ -1,5 +1,21 @@
 Revision history for Perl extension Javascript::Closure.
 
+0.04  2010/07/14
+
+MODIFICATION
+	  - check parameter value
+      - does not query twice for strings and urls now
+      - check that the url exists and carp if not
+
+ADDITION:
+      - added timeout setting via package variable TIMEOUT
+      - added warning_level option
+
+UPDATE:
+      - updated the doc
+      - updated the test suite
+
+
 0.03  2010/07/13
 	  - updated the input parameter to accept multiple urls or strings. 
       - updated the output_format to accept multiple format.

@@ -1,4 +1,4 @@
-Javascript-Closure version 0.03
+Javascript-Closure version 0.04
 ===============================
 
 Javascript::Closure offers a perl interface to Google Closure Compiler REST API.

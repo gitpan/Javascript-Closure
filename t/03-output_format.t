@@ -11,7 +11,7 @@ my $r = $ua->get($url);
    $r->code == 200 ? plan tests    => 1
                    : plan skip_all => "$url not reachable. The servir or your internet connection may be down.";
 
-diag('internect connection looks good');
+diag('internet connection looks good');
 
 use Javascript::Closure qw(minify :CONSTANTS);
 
@@ -281,6 +281,6 @@ JS_BEFORE
 
 
 
-my $ret =  minify(input=>$javascript_before,output_info=>[COMPILED_CODE,STATISTICS],output_format=>JSON);
-diag('testing multiple output_info settings');
+my $ret =  minify(input=>[$javascript_before],output_info=>[COMPILED_CODE,STATISTICS,WARNINGS],output_format=>JSON,warnings=>VERBOSE);
+diag('testing multiple output_info settings with json as output format and warnings set to VERBOSE');
 ok($ret=~m/"statistics":{/,'Javascript code was return with statistics information.');

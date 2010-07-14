@@ -1,4 +1,4 @@
-use Test::More tests => 10;
+use Test::More tests => 13;
 
 
 use Javascript::Closure qw(:CONSTANTS);
@@ -15,3 +15,6 @@ ok(STATISTICS eq 'statistics','STATISTICS imported');
 ok(TEXT eq 'text','TEXT imported');
 ok(JSON eq 'json','JSON imported');
 ok(XML eq 'xml','XML imported');
+ok(QUIET eq 'QUIET','QUIET imported');
+ok(DEFAULT eq 'DEFAULT','DEFAULT imported');
+ok(VERBOSE eq 'VERBOSE','VERBOSE imported');
