@@ -7,7 +7,7 @@ WriteMakefile(
     VERSION_FROM      => 'lib/Javascript/Closure.pm', 
     ABSTRACT_FROM     => 'lib/Javascript/Closure.pm', 
     PREREQ_PM         => {
-		'LWP::UserAgent'=> 0,
-		'Test::More'	=> 0
-	},
+		'LWP::UserAgent'=> '0',
+		'Test::More'	=> '0'
+	}
 );

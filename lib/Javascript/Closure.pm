@@ -4,15 +4,15 @@ use strict;
 use warnings;
 use Carp;
 use LWP::UserAgent;
-our $VERSION = 0.04;
+our $VERSION = 0.05;
 
 use constant {
     WHITESPACE_ONLY         => 'WHITESPACE_ONLY',
     SIMPLE_OPTIMIZATIONS    => 'SIMPLE_OPTIMIZATIONS',
     ADVANCED_OPTIMIZATIONS  => 'ADVANCED_OPTIMIZATIONS',
-	QUIET					=> 'QUIET',
-	DEFAULT					=> 'DEFAULT',
-	VERBOSE					=> 'VERBOSE',
+    QUIET					=> 'QUIET',
+    DEFAULT					=> 'DEFAULT',
+    VERBOSE					=> 'VERBOSE',
     COMPILED_CODE           => 'compiled_code',
     WARNINGS                => 'warnings',
     ERRORS                  => 'errors',
@@ -125,7 +125,7 @@ Javascript::Closure - compress your javascript code using Google online service 
 
 =head1 VERSION
 
-0.04
+0.05
 
 =head1 SYNOPSIS
 
@@ -151,7 +151,7 @@ Javascript::Closure - compress your javascript code using Google online service 
                             output_format    => XML,
                             output_info      => [STATISTICS,WARNINGS,COMPILED_CODE],
                             compilation_level=> SIMPLE_OPTIMIZATIONS,
-							warning_level	 => VERBOSE
+                            warning_level	 => VERBOSE
     );
 
 
@@ -159,16 +159,29 @@ Javascript::Closure - compress your javascript code using Google online service 
 
 This package allows you to compress your javascript code by using the online service of Closure Compiler offered by Google
 via a REST API. 
+
+The Closure compiler offers 3 different level of compression and tools to analyze the code.
+
+You can therefore get errors, warnings about the code and some statistics about the compression.
+
+The Closure compiler offers also some annotations to be used in your code in order to offer optimum compression.
+
+This can come in handy once a project is finish to merge all the files, pass it through the ADVANCED_OPTIMIZATIONS algorithm
+
+to get the most out of it.
+
 See L<http://closure-compiler.appspot.com/> for further information.
 
 
 =head2 MOTIVATION
 
-Needed a package to encapsulate a coherent API for a future Javascript::Minifier::Any package.
+Needed a package to encapsulate a coherent API for a future Javascript::Minifier::Any package
+
+and wanted a package with as few dependencies as possible.
 
 =head2 ADVANTAGES
 
-Gives you access to the closure compression algo with an unified API.
+Gives you access to the closure compression algo with a unified API.
 It also gives you access to code analyze via errors, warnings and authorizing via statistics.
 
 =head1  SUBROUTINE
@@ -180,7 +193,7 @@ It also gives you access to code analyze via errors, warnings and authorizing vi
 
 Takes an hash with the following parameters(parameters ended with * are optionals):
 
-=item input
+=item B<input>
 
 Specify the javascript source to be compressed/analysed. 
 It can be either an url or a scalar.
@@ -196,7 +209,7 @@ Example:
     my $compressed   = minify(input=>['http://www.yourdomain.com/yourscript.js','http://www.yourdomain.com/yourscript2.js',$jscode]);     
 
 
-=item compilation_level
+=item B<compilation_level>
 
 Specifies the algorithm use to compress the javascript code. 
 You can specify them by using one of the following constants:
@@ -216,7 +229,7 @@ Example:
 
 See CONSTANTS section for further information about the algorithms.
     
-=item output_info
+=item B<output_info>
 
 Specify the informations you will get back from the service.
 it accepts either a scalar or an array reference.
@@ -240,7 +253,7 @@ Example:
 	#everything was ok so you want to compressed code and some statistics about the efficiency of the compresssion
     my $errors   = minify(input=>$jscode,output_info=>[COMPILED_CODE,STATISTICS]);
      
- - output_format
+=item B<output_format>
 
 Specify the format of the response.
 It can be one of the following constants:
@@ -260,7 +273,7 @@ Example:
     my $errors   = minify(input=>$jscode,output_format=>XML);
 
 	#get back the response as JSON
-    my $errors   = minify(input=>$jscode,output_format=>JSON);
+    my $compress   = minify(input=>$jscode,output_format=>JSON);
 
 Specifying the format can be useful if you want not only the compiled code but warnings,errors or statistics.
 Though minify only returns the compressed version of the javascript code as a scalar,you can easily json-ify it 
@@ -286,12 +299,12 @@ Javascript::Closure does not offer shortcuts access to errors,warnings or statis
 Might add a Javascript::Closure::Response::JSON to make thing even sweeter but access through an hash is certainly faster
 and the overhead of function call does not seem necessary...
 
-=item warning_level
+=item B<warning_level>
 
 Specifies the amount of information you will get when you set the output_info to WARNINGS. 
 You can specify them by using one of the following constants:
 
-    QUIETE
+    QUIET
     DEFAULT (default)
     VERBOSE
 
@@ -378,7 +391,7 @@ See L<http://code.google.com/intl/ja/closure/compiler/docs/api-ref.html#warn> fo
 
 =over
 
-Set by default to 10s. You can modify it if you need too:
+Set by default to 5s. You can modify it if you need to:
 
     $Javascript::Closure::Timeout=15;
 
@@ -391,14 +404,14 @@ Set by default to 10s. You can modify it if you need too:
 
 =over
 
-=item C<< Fail to connect to http://closure-compiler.appspot.com/compile:... >>
+=item C<< Fail to connect to http://closure-compiler.appspot.com/compile: ... >>
 
 The module could not connect and successfully compress your javascript. 
 See the detail error to get a hint.
 
-=item C<< .... is not in:... >>
+=item C<< ... is not in:...(list of possible value) >>
 
-One of the optional parameter received a value that is not expected. 
+One of the optional parameter received does not contain an authorized predefined value. 
 
 =back
 
@@ -406,7 +419,7 @@ One of the optional parameter received a value that is not expected.
 
 =over
 
-=item C<< The following url could not be fetched::... >>
+=item C<< The following url could not be fetched::...(url that failed) >>
 
 The module could not connect to the url. 
 See the detail error to get a hint.
@@ -427,6 +440,11 @@ none of the following optional parameters are supported:
  - exclude_default_externs
  - externs_url
  - js_externs
+
+=item B<copyrights information>
+
+If you use the Closure Compiler annotations, you can keep the copyright notice within the comments.
+If you do not use them though, this package will still offer you a way to add copyright notice after the compression is done.
 
 
 =back

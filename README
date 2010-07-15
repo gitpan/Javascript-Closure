@@ -1,4 +1,4 @@
-Javascript-Closure version 0.04
+Javascript-Closure version 0.05
 ===============================
 
 Javascript::Closure offers a perl interface to Google Closure Compiler REST API.
@@ -19,8 +19,6 @@ This module requires these other modules and libraries:
   LWP::UserAgent
 
 COPYRIGHT AND LICENCE
-
-Put the correct copyright and licence information here.
 
 Copyright (C) 2010 by shirirules
 
