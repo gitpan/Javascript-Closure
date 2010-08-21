@@ -1,5 +1,10 @@
 Revision history for Perl extension Javascript::Closure.
 
+0.06  2010/08/21
+
+MODIFICATION
+      - the tar contained unnecessary files making make fails.
+
 0.05  2010/07/15
 
 mostly documentation based update.no new features per se.

@@ -4,7 +4,7 @@ use strict;
 use warnings;
 use Carp;
 use LWP::UserAgent;
-our $VERSION = 0.05;
+our $VERSION = 0.06;
 
 use constant {
     WHITESPACE_ONLY         => 'WHITESPACE_ONLY',
@@ -125,7 +125,7 @@ Javascript::Closure - compress your javascript code using Google online service 
 
 =head1 VERSION
 
-0.05
+0.06
 
 =head1 SYNOPSIS
 
