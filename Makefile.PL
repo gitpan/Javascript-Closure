@@ -3,7 +3,7 @@ use ExtUtils::MakeMaker;
 
 WriteMakefile(
     NAME              => 'Javascript::Closure',
-    AUTHOR         => 'SHIRIRU <shiriru0111@hotmail.com>',
+    AUTHOR         => 'SHIRIRU <shirirulestheworld@gmail.com>',
     VERSION_FROM      => 'lib/Javascript/Closure.pm', 
     ABSTRACT_FROM     => 'lib/Javascript/Closure.pm', 
     PREREQ_PM         => {

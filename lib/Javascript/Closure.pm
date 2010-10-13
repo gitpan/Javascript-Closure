@@ -4,7 +4,7 @@ use strict;
 use warnings;
 use Carp;
 use LWP::UserAgent;
-our $VERSION = 0.06;
+our $VERSION = 0.07;
 
 use constant {
     WHITESPACE_ONLY         => 'WHITESPACE_ONLY',
@@ -123,12 +123,7 @@ __END__
 
 Javascript::Closure - compress your javascript code using Google online service of Closure Compiler 
 
-=head1 VERSION
-
-0.06
-
 =head1 SYNOPSIS
-
 
     #nothing is imported by default
     use Javascript::Closure qw(minify :CONSTANTS); 
@@ -166,7 +161,7 @@ You can therefore get errors, warnings about the code and some statistics about 
 
 The Closure compiler offers also some annotations to be used in your code in order to offer optimum compression.
 
-This can come in handy once a project is finish to merge all the files, pass it through the ADVANCED_OPTIMIZATIONS algorithm
+This can come in handy once a project is finished to merge all the files, pass it through the ADVANCED_OPTIMIZATIONS algorithm
 
 to get the most out of it.
 
@@ -184,10 +179,10 @@ and wanted a package with as few dependencies as possible.
 Gives you access to the closure compression algo with a unified API.
 It also gives you access to code analyze via errors, warnings and authorizing via statistics.
 
-=head1  SUBROUTINE
+=head2  SUBROUTINE
 
 
-=head2 minify
+=head3 minify
 
 =over
 
@@ -214,9 +209,17 @@ Example:
 Specifies the algorithm use to compress the javascript code. 
 You can specify them by using one of the following constants:
 
-    WHITESPACE_ONLY
-    SIMPLE_OPTIMIZATIONS (default)
-    ADVANCED_OPTIMIZATIONS
+ - WHITESPACE_ONLY
+   remove space and comments from javascript code (default).
+
+ - SIMPLE_OPTIMIZATIONS
+   compress the code by renaming local variables.
+
+ - ADVANCED_OPTIMIZATIONS
+   compress all local variables, do some clever stripping down of the code (unused functions are removed) 
+   but you need to setup external references to do it properly.
+
+
 
 Example:
 
@@ -235,10 +238,19 @@ Specify the informations you will get back from the service.
 it accepts either a scalar or an array reference.
 You can specify them by using the following constants:
 
-     COMPILED_CODE (default)
-     WARNINGS
-     ERRORS
-     STATISTICS
+ - COMPILED_CODE 
+   return only the raw compressed javascript source code (default).
+
+ - WARNINGS
+   return any warnings found by the Closure Compiler (ie,code after a return statement)
+
+ - ERRORS
+   return any errors in your javascript code found by the Closure Compiler
+
+ - STATISTICS
+   return some statistics about the compilation process (original file size, compressed file size, time,etc)
+
+See L<http://code.google.com/intl/ja/closure/compiler/docs/api-ref.html#output_info> for further information.
 
 Example:
 
@@ -258,9 +270,16 @@ Example:
 Specify the format of the response.
 It can be one of the following constants:
 
-     TEXT (default)
-     JSON
-     XML
+ - TEXT
+   return the output in raw text format with the information set with your output_info settings (default).
+
+ - XML
+   return the output in XML format with the information set with your output_info settings.
+
+ - JSON
+   return the output in JSON format with the information set with your output_info settings.
+
+See L<http://code.google.com/intl/ja/closure/compiler/docs/api-ref.html#out> for further information.
 
 Example:
 
@@ -304,9 +323,16 @@ and the overhead of function call does not seem necessary...
 Specifies the amount of information you will get when you set the output_info to WARNINGS. 
 You can specify them by using one of the following constants:
 
-    QUIET
-    DEFAULT (default)
-    VERBOSE
+ - DEFAULT
+
+   default
+
+ - QUIET
+
+ - VERBOSE
+
+
+See L<http://code.google.com/intl/ja/closure/compiler/docs/api-ref.html#warn> for further information.
 
 Example:
 
@@ -319,71 +345,12 @@ Example:
     );
 
 
-See CONSTANTS section for further information about the algorithms.
-
 =back
 
-=head1  CONSTANTS
+=head3  CONSTANTS
 
 Each optional parameter to minify can be specified via constants.
 If you do not import the :CONSTANTS, you will have to write Javascript::Closure::NAME_OF_THE_CONSTANT;
-
-=item B<compilation level related>
-
- - WHITESPACE_ONLY
-   remove space and comments from javascript code.
-
- - SIMPLE_OPTIMIZATIONS
-   compress the code by renaming local variables
-
- - ADVANCED_OPTIMIZATIONS
-   compress all local variables, do some clever stripping down of the code (unused functions are removed) 
-   but you need to setup external references to do it properly.
-
-See L<http://code.google.com/intl/ja/closure/compiler/docs/api-tutorial3.html> for further information.
-
-=item B<output format related>
-
- - XML
-   return the output in XML format with the information set with your output_info settings
-
- - JSON
-   return the output in JSON format with the information set with your output_info settings
-
- - TEXT
-   return the output in raw text format with the information set with your output_info settings
-
-See L<http://code.google.com/intl/ja/closure/compiler/docs/api-ref.html#out> for further information.
-
-=item B<output info related>
-
- - COMPILED_CODE
-   return only the raw compressed javascript source code.
-
- - WARNINGS
-   return any warnings found by the Closure Compiler (ie,code after a return statement)
-
- - ERRORS
-   return any errors in your javascript code found by the Closure Compiler
-
- - STATISTICS
-   return some statistics about the compilation process (original file size, compressed file size, time,etc)
-
-See L<http://code.google.com/intl/ja/closure/compiler/docs/api-ref.html#output_info> for further information.
-
-=item B<warning level related>
-
- - QUIET
-
- - DEFAULT
-
- - VERBOSE
-
-
-See L<http://code.google.com/intl/ja/closure/compiler/docs/api-ref.html#warn> for further information.
-
-
-=over 
 
 =head1 PACKAGE PROPERTY
 
@@ -398,9 +365,9 @@ Set by default to 5s. You can modify it if you need to:
 =back
 
 
-=head1 DIAGNOSTICS
+=head2 DIAGNOSTICS
 
-=head2 croak
+=head3 croak
 
 =over
 
@@ -415,7 +382,7 @@ One of the optional parameter received does not contain an authorized predefined
 
 =back
 
-=head2 carp
+=head3 carp
 
 =over
 
@@ -426,7 +393,7 @@ See the detail error to get a hint.
 
 =back
 
-=head1 TODO
+=head2 TODO
 
 =over
 
@@ -486,7 +453,7 @@ i will try to do my best to fix it (patches welcome)!
 
 =head1 AUTHOR
 
-shiriru E<lt>shiriru0111[arobas]hotmail.comE<gt>
+shiriru E<lt>shirirulestheworld[arobas]gmail.comE<gt>
 
 =head1 LICENSE AND COPYRIGHT
 

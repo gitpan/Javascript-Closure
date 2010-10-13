@@ -9,7 +9,7 @@ my $ua = LWP::UserAgent->new();
    $ua->timeout(10);
 my $r = $ua->get($url);
    $r->code == 200 ? plan tests    => 1
-                   : plan skip_all => "$url not reachable. The servir or your internet connection may be down.";
+                   : plan skip_all => "$url not reachable. The server or your internet connection may be down.";
 
 diag('internect connection looks good');
 

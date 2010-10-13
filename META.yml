@@ -1,9 +1,9 @@
 --- #YAML:1.0
 name:               Javascript-Closure
-version:            0.06
+version:            0.07
 abstract:           compress your javascript code using Google online service of Closure Compiler 
 author:
-    - SHIRIRU <shiriru0111@hotmail.com>
+    - SHIRIRU <shirirulestheworld@gmail.com>
 license:            unknown
 distribution_type:  module
 configure_requires:
